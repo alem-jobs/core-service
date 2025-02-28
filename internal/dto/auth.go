@@ -1,22 +1,31 @@
 package dto
 
-import (
-	"github.com/aidosgal/alem.core-service/internal/model"
-)
-
 type LoginRequest struct {
-	Phone string `json:"phone"`
+	Phone    string `json:"phone"`
 	Password string `json:"password"`
 }
 
 type LoginResponse struct {
-	User model.User `json:"user"`
+	User        User `json:"user"`
+	IsCompleted bool `json:"is_completed"`
 }
 
 type RegisterRequest struct {
-	User model.User `json:"user"`
+	User User `json:"user"`
 }
 
 type RegisterResponse struct {
-	User model.User `json:"user"`
+	User User `json:"user"`
+}
+
+type User struct {
+	Id             int     `json:"id"`
+	Name           string  `json:"name"`
+	OrganizationId int     `json:"organization_id"`
+	Phone          string  `json:"phone"`
+	Password       string  `json:"password"`
+	AvatarURL      string  `json:"avatar_url"`
+	Balance        float64 `json:"balance"`
+	CreatedAt      string  `json:"created_at"`
+	UpdatedAt      string  `json:"updated_at"`
 }

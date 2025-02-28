@@ -37,9 +37,20 @@ func (r *CategoryRepository) Insert(ctx context.Context, category *model.Categor
 }
 
 func (r *CategoryRepository) FindByID(ctx context.Context, id int) (*model.Category, error) {
-	query := `SELECT id, name, parent_id, lft, rgt, depth FROM categories WHERE id = $1`
+	query := `
+        SELECT id, name, parent_id, lft, rgt, depth 
+        FROM categories 
+        WHERE id = $1
+    `
 	var category model.Category
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&category.ID, &category.Name, &category.ParentID, &category.Left, &category.Right, &category.Depth)
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
+        &category.ID, 
+        &category.Name, 
+        &category.ParentID, 
+        &category.Left, 
+        &category.Right, 
+        &category.Depth,
+    )
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -50,8 +61,15 @@ func (r *CategoryRepository) FindByID(ctx context.Context, id int) (*model.Categ
 }
 
 func (r *CategoryRepository) Update(ctx context.Context, category *model.Category) error {
-	query := `UPDATE categories SET name = $1 WHERE id = $2`
-	_, err := r.db.ExecContext(ctx, query, category.Name, category.ID)
+	query := `
+        UPDATE categories 
+        SET name = $1 
+        WHERE id = $2
+    `
+	_, err := r.db.ExecContext(
+        ctx, query, 
+        category.Name, category.ID,
+    )
 	return err
 }
 
@@ -62,7 +80,10 @@ func (r *CategoryRepository) Delete(ctx context.Context, id int) error {
 }
 
 func (r *CategoryRepository) FindAll(ctx context.Context) ([]model.Category, error) {
-	query := `SELECT id, name, parent_id, lft, rgt, depth FROM categories ORDER BY lft`
+	query := `
+        SELECT id, name, parent_id, lft, rgt, depth 
+        FROM categories ORDER BY lft
+    `
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
@@ -72,7 +93,14 @@ func (r *CategoryRepository) FindAll(ctx context.Context) ([]model.Category, err
 	var categories []model.Category
 	for rows.Next() {
 		var category model.Category
-		err := rows.Scan(&category.ID, &category.Name, &category.ParentID, &category.Left, &category.Right, &category.Depth)
+		err := rows.Scan(
+            &category.ID, 
+            &category.Name, 
+            &category.ParentID, 
+            &category.Left, 
+            &category.Right, 
+            &category.Depth,
+        )
 		if err != nil {
 			return nil, err
 		}

@@ -1,0 +1,8 @@
+CREATE TABLE categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    lft INT NOT NULL,
+    rgt INT NOT NULL,
+    depth INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

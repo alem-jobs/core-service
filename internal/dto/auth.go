@@ -6,8 +6,9 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	User        User `json:"user"`
-	IsCompleted bool `json:"is_completed"`
+	User        User   `json:"user"`
+	IsCompleted bool   `json:"is_completed"`
+	Token       string `json:"token"`
 }
 
 type RegisterRequest struct {
@@ -15,7 +16,8 @@ type RegisterRequest struct {
 }
 
 type RegisterResponse struct {
-	User User `json:"user"`
+	User  User   `json:"user"`
+	Token string `json:"token"`
 }
 
 type User struct {

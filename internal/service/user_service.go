@@ -12,8 +12,8 @@ import (
 )
 
 type UserService struct {
-	log          *slog.Logger
-	userRepo     *repository.UserRepository
+	log      *slog.Logger
+	userRepo *repository.UserRepository
 }
 
 func NewUserService(log *slog.Logger, userRepo *repository.UserRepository) *UserService {
@@ -36,19 +36,19 @@ func (s *UserService) Register(req dto.RegisterRequest) (*dto.RegisterResponse, 
 		Phone:          req.User.Phone,
 		Password:       req.User.Password,
 		AvatarURL:      req.User.AvatarURL,
-		Balance:        req.User.Balance,
+		Balance:        0.0,
 	}
 
-    id, err := s.userRepo.CreateUser(&userModel)
+	id, err := s.userRepo.CreateUser(&userModel)
 	if err != nil {
 		return nil, err
 	}
 
 	token, err := lib.NewToken(
-        int64(id), int64(req.User.OrganizationId), "organization_type")
-    if err != nil {
-        return nil, err
-    }
+		int64(id), int64(req.User.OrganizationId), "organization_type")
+	if err != nil {
+		return nil, err
+	}
 
 	return &dto.RegisterResponse{User: req.User, Token: token}, nil
 }
@@ -70,17 +70,17 @@ func (s *UserService) Login(req dto.LoginRequest) (*dto.LoginResponse, error) {
 	}
 
 	return &dto.LoginResponse{
-        User: dto.User{
-            Id:             user.Id,
-            Name:           user.Name,
-            OrganizationId: user.OrganizationId,
-            Phone:          user.Phone,
-            AvatarURL:      user.AvatarURL,
-            Balance:        user.Balance,
-        }, 
-        IsCompleted: true, 
-        Token: token,
-    }, nil
+		User: dto.User{
+			Id:             user.Id,
+			Name:           user.Name,
+			OrganizationId: user.OrganizationId,
+			Phone:          user.Phone,
+			AvatarURL:      user.AvatarURL,
+			Balance:        user.Balance,
+		},
+		IsCompleted: true,
+		Token:       token,
+	}, nil
 }
 
 func (s *UserService) GetProfile(userID int) (*dto.User, error) {

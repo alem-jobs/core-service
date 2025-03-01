@@ -60,6 +60,11 @@ func (s *Server) Run() error {
     categoryService := service.NewCategoryService(categoryRepository, s.log)
     categoryHandler := handler.NewCategoryHandler(s.log, categoryService)
 
+    vacancyRepository := repository.NewVacancyRepository(s.log, db) 
+    vacancyDetailRepository := repository.NewVacancyDetailRepository(s.log, db) 
+    vacancyService := service.NewVacancyService(s.log, vacancyRepository, vacancyDetailRepository)
+    vacancyHandler := handler.NewVacancyHandler(s.log, vacancyService)
+
 	router.Route("/api/v1", func(apiRouter chi.Router) {
         apiRouter.Route("/auth", func(authRouter chi.Router) {
             authRouter.Post("/login", userHandler.Login)
@@ -80,6 +85,13 @@ func (s *Server) Run() error {
             categoryRouter.Get("/", categoryHandler.GetCategoryTree)
             categoryRouter.Post("/", categoryHandler.CreateCategory)
             categoryRouter.Get("/{id}", categoryHandler.GetCategoryByID)
+        })
+        apiRouter.Route("/vacancy", func(vacancyRouter chi.Router) {
+            vacancyRouter.Use(auth.AuthMiddleware)
+            vacancyRouter.Post("/", vacancyHandler.CreateVacancy)
+            vacancyRouter.Get("/", vacancyHandler.ListVacancies)
+            vacancyRouter.Get("/{id}", vacancyHandler.GetVacancy)
+            vacancyRouter.Put("/{id}", vacancyHandler.UpdateVacancy)
         })
     })
 

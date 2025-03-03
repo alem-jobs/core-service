@@ -24,7 +24,7 @@ https://dev.jumystap.kz/api/v1/docs
 #### Running the project
 
 ```
-    make run
+make run
 ```
 
 #### Envirement variables
@@ -32,15 +32,15 @@ https://dev.jumystap.kz/api/v1/docs
 - config/local.yaml
 
 ```
-    env: "local"
-    port: 8000
-    database:
-        user: "postgres"
-        password: "password"
-        host: "localhost"
-        port: 5432
-        sslmode: "disable"
-        name: "alem"
+env: "local"
+port: 8000
+database:
+    user: "postgres"
+    password: "password"
+    host: "localhost"
+    port: 5432
+    sslmode: "disable"
+    name: "alem"
 ```
 
 ## 3. Project Structure

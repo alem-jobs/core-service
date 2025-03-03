@@ -39,7 +39,7 @@ func (s *Server) Run() error {
 	}
 
 	publicDir := filepath.Join(cwd, "public")
-	if err := os.MkdirAll(filepath.Join(publicDir, "files"), 0755); err != nil {
+	if err = os.MkdirAll(filepath.Join(publicDir, "files"), 0755); err != nil {
 		return err
 	}
 
@@ -87,6 +87,13 @@ func (s *Server) Run() error {
 	vacancyService := service.NewVacancyService(s.log, vacancyRepository, vacancyDetailRepository)
 	vacancyHandler := handler.NewVacancyHandler(s.log, vacancyService)
 
+	resumeRepository := repository.NewResumeRepository(s.log, db)
+	resumeExperienceRepository := repository.NewResumeExperienceRepository(s.log, db)
+	resumeSkillRepository := repository.NewResumeSkillRepository(s.log, db)
+	resumeService := service.NewResumeService(
+		s.log, resumeRepository, resumeSkillRepository, resumeExperienceRepository)
+	resumeHandler := handler.NewResumeHandler(s.log, resumeService)
+
 	messageRepo := repository.NewMessageRepository(db)
 	chatService := service.NewChatService(messageRepo, publicDir)
 	wsHandler := handler.NewWebSocketHandler(chatService)
@@ -120,6 +127,12 @@ func (s *Server) Run() error {
 			vacancyRouter.Get("/", vacancyHandler.ListVacancies)
 			vacancyRouter.Get("/{id}", vacancyHandler.GetVacancy)
 			vacancyRouter.Put("/{id}", vacancyHandler.UpdateVacancy)
+		})
+		apiRouter.Route("/resumes", func(resumeRouter chi.Router) {
+			resumeRouter.Use(auth.AuthMiddleware)
+			resumeRouter.Post("/", resumeHandler.CreateResume)
+			resumeRouter.Get("/", resumeHandler.ListResume)
+			resumeRouter.Get("/{resume_id}", resumeHandler.GetResume)
 		})
 		apiRouter.Route("/messages", func(wsRouter chi.Router) {
 			wsRouter.Use(auth.AuthMiddleware)

@@ -1,1 +1,0 @@
-ajdosgalimzan@MacBook-Air-Ajdos.local.92094

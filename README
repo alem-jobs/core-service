@@ -6,7 +6,7 @@ This go backend project dedicated to make REST API for mobile app called "Alem",
 
 TODO
 
-- [ ] Resume Experience repository layer
+- [X] Resume Experience repository layer
 - [ ] Resume service layer with CRUD
 - [ ] Resume handler
 - [X] Organization services migration

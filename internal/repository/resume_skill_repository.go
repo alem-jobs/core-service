@@ -2,25 +2,31 @@ package repository
 
 import (
 	"context"
-	"log/slog"
 	"database/sql"
+	"log/slog"
 
 	"github.com/aidosgal/alem.core-service/internal/model"
 )
 
 type ResumeSkillRepository struct {
 	log *slog.Logger
-	db *sql.DB
+	db  *sql.DB
 }
 
-func NewResumeSkillRepository(log *slog.Logger, db *sql.DB) *ResumeSkillRepository {
+func NewResumeSkillRepository(
+    log *slog.Logger, 
+    db *sql.DB,
+) *ResumeSkillRepository {
 	return &ResumeSkillRepository{
 		log: log,
-		db: db,
+		db:  db,
 	}
 }
 
-func (r *ResumeSkillRepository) CreateResumeSkill(ctx context.Context, resume_skill model.ResumeSkill) (*model.ResumeSkill, error) {
+func (r *ResumeSkillRepository) CreateResumeSkill(
+	ctx context.Context,
+	resume_skill model.ResumeSkill,
+) (*model.ResumeSkill, error) {
 	query := `
         INSERT INTO resume_skills (resume_id, skill)
         VALUES ($1, $2) RETURNING id`
@@ -35,7 +41,10 @@ func (r *ResumeSkillRepository) CreateResumeSkill(ctx context.Context, resume_sk
 	return r.GetResumeSkill(ctx, resume_skill_id)
 }
 
-func (r *ResumeSkillRepository) GetResumeSkill(ctx context.Context, resume_skill_id int) (*model.ResumeSkill, error) {
+func (r *ResumeSkillRepository) GetResumeSkill(
+	ctx context.Context,
+	resume_skill_id int,
+) (*model.ResumeSkill, error) {
 	query := `
         SELECT id, resume_id, skill
         FROM resume_skills
@@ -53,7 +62,10 @@ func (r *ResumeSkillRepository) GetResumeSkill(ctx context.Context, resume_skill
 	return resume, nil
 }
 
-func (r *ResumeSkillRepository)  ListResumeSkills(ctx context.Context, resume_id int) ([]*model.ResumeSkill, error) {
+func (r *ResumeSkillRepository) ListResumeSkills(
+	ctx context.Context,
+	resume_id int,
+) ([]*model.ResumeSkill, error) {
 	query := `
         SELECT id, resume_id, skill
         FROM resume_skills

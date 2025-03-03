@@ -1,0 +1,18 @@
+Alem Core
+
+Introduction
+
+This go backend project dedicated to make REST API for mobile app called "Alem", that helps to find jobs in Europe for CIS employeers. The techonlogy used there is go-chi as the REST API framework, postgresql as the main database.
+
+TODO
+
+- [ ] Resume Experience repository layer
+- [ ] Resume service layer with CRUD
+- [ ] Resume handler
+- [X] Organization services migration
+- [ ] Organization services model/dto
+- [ ] Organization services repository CRUD
+- [ ] Organization services service layer CRUD
+- [ ] Organization services handler
+- [ ] Write documentation
+- [ ] Make the swagger

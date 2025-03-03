@@ -21,13 +21,33 @@ func NewResumeRepository(log *slog.Logger, db *sql.DB) *ResumeRepository {
 	}
 }
 
-func (r *ResumeRepository) CreateResume(ctx context.Context, resume model.Resume) (model.Resume, error) {
+func (r *ResumeRepository) CreateResume(
+    ctx context.Context, 
+    resume model.Resume,
+) (model.Resume, error) {
 	query := `
-        INSERT INTO resumes (user_id, category_id, description, salary_from, salary_to, salary_period, created_at)
+        INSERT INTO resumes (
+            user_id, 
+            category_id, 
+            description, 
+            salary_from, 
+            salary_to, 
+            salary_period, 
+            created_at
+        )
         VALUES ($1, $2, $3, $4, $5, $6, NOW())
-        RETURNING id, created_at`
+        RETURNING id, created_at
+    `
 
-	row := r.db.QueryRowContext(ctx, query, resume.UserId, resume.CategoryId, resume.Description, resume.SalaryFrom, resume.SalaryTo, resume.SalaryPeriod)
+	row := r.db.QueryRowContext(
+        ctx, query, 
+        resume.UserId, 
+        resume.CategoryId, 
+        resume.Description, 
+        resume.SalaryFrom, 
+        resume.SalaryTo, 
+        resume.SalaryPeriod,
+    )
 	err := row.Scan(&resume.Id, &resume.CreatedAt)
 	if err != nil {
 		return model.Resume{}, err
@@ -37,7 +57,19 @@ func (r *ResumeRepository) CreateResume(ctx context.Context, resume model.Resume
 }
 
 func (r *ResumeRepository) GetResumeByID(ctx context.Context, id int) (model.Resume, error) {
-	query := `SELECT id, user_id, category_id, description, salary_from, salary_to, salary_period, created_at FROM resumes WHERE id = $1`
+	query := `
+        SELECT 
+            id, 
+            user_id, 
+            category_id, 
+            description, 
+            salary_from, 
+            salary_to, 
+            salary_period, 
+            created_at 
+        FROM resumes 
+        WHERE id = $1
+    `
 
 	var resume model.Resume
 	err := r.db.QueryRowContext(ctx, query, id).Scan(

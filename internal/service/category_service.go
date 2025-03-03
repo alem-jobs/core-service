@@ -11,11 +11,14 @@ import (
 )
 
 type CategoryService struct {
-    log *slog.Logger
-	repo *repository.CategoryRepository
+    log  *slog.Logger
+	repo *repository.CategoryService
 }
 
-func NewCategoryService(repo *repository.CategoryRepository, log *slog.Logger) *CategoryService {
+func NewCategoryService(
+	repo *repository.CategoryRepository,
+	log *slog.Logger,
+) *CategoryService {
     return &CategoryService{repo: repo, log: log}
 }
 

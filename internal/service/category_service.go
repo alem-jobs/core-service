@@ -12,7 +12,7 @@ import (
 
 type CategoryService struct {
     log  *slog.Logger
-	repo *repository.CategoryService
+	repo *repository.CategoryRepository
 }
 
 func NewCategoryService(

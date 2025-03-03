@@ -52,3 +52,30 @@ func (r *ResumeSkillRepository) GetResumeSkill(ctx context.Context, resume_skill
 
 	return resume, nil
 }
+
+func (r *ResumeSkillRepository)  ListResumeSkills(ctx context.Context, resume_id int) ([]*model.ResumeSkill, error) {
+	query := `
+        SELECT id, resume_id, skill
+        FROM resume_skills
+        WHERE resume_id = $1
+    `
+
+	rows, err := r.db.QueryContext(ctx, query, resume_id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var resumes []*model.ResumeSkill
+	for rows.Next() {
+		resume := &model.ResumeSkill{}
+		if err := rows.Scan(
+			&resume.Id, &resume.ResumeId, &resume.Skill,
+		); err != nil {
+			return nil, err
+		}
+		resumes = append(resumes, resume)
+	}
+
+	return resumes, nil
+}

@@ -7,6 +7,8 @@ type Resume struct {
 	Description string `json:"description"`
 	SalaryFrom int `json:"salary_from"`
 	SalaryTo int `json:"salary_to"`
+	Experiences []*ResumeExperience `json:"experiences"`
+	Skills []*ResumeSkill `json:"skills"`
 	SalaryPeriod string `json:"salary_period"`
 	CreatedAt string `json:"created_at"`
 }

@@ -8,7 +8,7 @@ TODO
 
 - [X] Resume Experience repository layer
 - [X] Resume service layer with CRUD
-- [ ] Resume handler
+- [X] Resume handler
 - [X] Organization services migration
 - [ ] Organization services model/dto
 - [ ] Organization services repository CRUD

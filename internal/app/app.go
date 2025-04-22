@@ -139,7 +139,7 @@ func (s *Server) Run() error {
 			wsRouter.Get("/ws", wsHandler.HandleWebSocket)
 			wsRouter.Post("/", wsHandler.SendMessage)
 			wsRouter.Get("/", wsHandler.GetMessages)
-			wsRouter.Get("/", wsHandler.GetRooms)
+			wsRouter.Get("/rooms", wsHandler.GetRooms)
 		})
 	})
 

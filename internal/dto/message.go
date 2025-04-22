@@ -4,6 +4,7 @@ type Message struct {
 	Id         int            `json:"id"`
 	SenderId   int            `json:"sender_id"`
 	ReceiverId int            `json:"receiver_id"`
+	Receiver   *User          `json:"receiver"`
 	Text       *string        `json:"text"`
 	Files      []*MessageFile `json:"files"`
 	CreatedAt  string         `json:"created_at"`

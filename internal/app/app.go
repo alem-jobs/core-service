@@ -95,7 +95,7 @@ func (s *Server) Run() error {
 	resumeHandler := handler.NewResumeHandler(s.log, resumeService)
 
 	messageRepo := repository.NewMessageRepository(db)
-	chatService := service.NewChatService(messageRepo, publicDir)
+	chatService := service.NewChatService(messageRepo, publicDir, userService)
 	wsHandler := handler.NewWebSocketHandler(chatService)
 
 	fileServer(router, "/files", http.Dir(filepath.Join(publicDir, "files")))

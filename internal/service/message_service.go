@@ -31,13 +31,15 @@ type chatService struct {
 	connections      map[int]*websocket.Conn
 	connectionsMutex sync.RWMutex
 	publicDir        string
+	userService      *UserService
 }
 
-func NewChatService(messageRepo repository.MessageRepository, publicDir string) ChatService {
+func NewChatService(messageRepo repository.MessageRepository, publicDir string, userService *UserService) ChatService {
 	return &chatService{
 		messageRepo: messageRepo,
 		connections: make(map[int]*websocket.Conn),
 		publicDir:   publicDir,
+		userService: userService,
 	}
 }
 
@@ -128,7 +130,15 @@ func (s *chatService) GetMessagesByRoom(ctx context.Context, senderId, receiverI
 
 	messageDTOs := make([]dto.Message, 0, len(messages))
 	for _, message := range messages {
-		messageDTOs = append(messageDTOs, message.ToDTO())
+		receiver, err := s.userService.GetProfile(receiverId)
+		if err != nil {
+			return nil, err
+		}
+
+		messageDTO := message.ToDTO()
+		messageDTO.Receiver = receiver
+
+		messageDTOs = append(messageDTOs, messageDTO)
 	}
 
 	return messageDTOs, nil
@@ -142,7 +152,15 @@ func (s *chatService) GetRoomsBySenderId(ctx context.Context, senderId int) ([]d
 
 	messageDTOs := make([]dto.Message, 0, len(messages))
 	for _, message := range messages {
-		messageDTOs = append(messageDTOs, message.ToDTO())
+		receiver, err := s.userService.GetProfile(message.ReceiverId)
+		if err != nil {
+			return nil, err
+		}
+
+		messageDTO := message.ToDTO()
+		messageDTO.Receiver = receiver
+
+		messageDTOs = append(messageDTOs, messageDTO)
 	}
 
 	return messageDTOs, nil

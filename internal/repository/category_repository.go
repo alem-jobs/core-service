@@ -21,15 +21,14 @@ func NewCategoryRepository(db *sql.DB) *CategoryRepository {
 func (r *CategoryRepository) Insert(ctx context.Context, category *model.Category) error {
 	query := `
         INSERT INTO categories 
-        (name, parent_id, lft, rgt, depth) 
-        VALUES ($1, $2, $3, $4, $5) 
+        (name, lft, rgt, depth) 
+        VALUES ($1, $2, $3, $4) 
         RETURNING id
     `
 	return r.db.QueryRowContext(
         ctx, 
         query, 
         category.Name, 
-        category.ParentID, 
         category.Left, 
         category.Right, 
         category.Depth,
@@ -38,7 +37,7 @@ func (r *CategoryRepository) Insert(ctx context.Context, category *model.Categor
 
 func (r *CategoryRepository) FindByID(ctx context.Context, id int) (*model.Category, error) {
 	query := `
-        SELECT id, name, parent_id, lft, rgt, depth 
+        SELECT id, name, lft, rgt, depth 
         FROM categories 
         WHERE id = $1
     `
@@ -46,7 +45,6 @@ func (r *CategoryRepository) FindByID(ctx context.Context, id int) (*model.Categ
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
         &category.ID, 
         &category.Name, 
-        &category.ParentID, 
         &category.Left, 
         &category.Right, 
         &category.Depth,
@@ -81,7 +79,7 @@ func (r *CategoryRepository) Delete(ctx context.Context, id int) error {
 
 func (r *CategoryRepository) FindAll(ctx context.Context) ([]model.Category, error) {
 	query := `
-        SELECT id, name, parent_id, lft, rgt, depth 
+        SELECT id, name, lft, rgt, depth 
         FROM categories ORDER BY lft
     `
 	rows, err := r.db.QueryContext(ctx, query)
@@ -96,7 +94,6 @@ func (r *CategoryRepository) FindAll(ctx context.Context) ([]model.Category, err
 		err := rows.Scan(
             &category.ID, 
             &category.Name, 
-            &category.ParentID, 
             &category.Left, 
             &category.Right, 
             &category.Depth,

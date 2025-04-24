@@ -101,14 +101,15 @@ func (r *ResumeRepository) ListResumes(ctx context.Context, filters map[string]i
 	query := `SELECT id, user_id, category_id, description, salary_from, salary_to, salary_period, created_at FROM resumes WHERE 1=1`
 	args := []interface{}{}
 	idx := 1
-
-	if userId, ok := filters["user_id"]; ok {
+	userId, ok := filters["user_id"]
+	if ok && userId != 0 {
 		query += ` AND user_id = $` + fmt.Sprint(idx)
 		args = append(args, userId)
 		idx++
 	}
 
-	if categoryId, ok := filters["category_id"]; ok {
+	categoryId, ok := filters["category_id"]
+	if ok && categoryId != 0 {
 		query += ` AND category_id = $` + fmt.Sprint(idx)
 		args = append(args, categoryId)
 		idx++

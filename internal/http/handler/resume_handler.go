@@ -56,35 +56,21 @@ func (h *ResumeHandler) ListResume(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 
 	user_id_str := query.Get("user_id")
-	user_id, err := strconv.Atoi(user_id_str)
-	if err != nil {
-		lib.WriteError(w, http.StatusBadRequest, err)
-		return
-	}
+	user_id := 0
+	user_id, _ = strconv.Atoi(user_id_str)
 
 	category_id_str := query.Get("category_id")
-	category_id, err := strconv.Atoi(category_id_str)
-	if err != nil {
-		lib.WriteError(w, http.StatusBadRequest, err)
-		return
-	}
+	category_id := 0
+	category_id, _ = strconv.Atoi(category_id_str)
 	
 	limit := 10
 	offset := 0
 	
 	limit_str := query.Get("limit")
-	limit, err = strconv.Atoi(limit_str)
-	if err != nil {
-		lib.WriteError(w, http.StatusBadRequest, err)
-		return
-	}
+	limit, _ = strconv.Atoi(limit_str)
 
 	offset_str := query.Get("offset")
-	offset, err = strconv.Atoi(offset_str)
-	if err != nil {
-		lib.WriteError(w, http.StatusBadRequest, err)
-		return
-	}
+	offset, _ = strconv.Atoi(offset_str)
 	
 	filters := map[string]interface{}{
 		"user_id": user_id,

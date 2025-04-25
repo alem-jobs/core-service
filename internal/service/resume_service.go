@@ -9,23 +9,26 @@ import (
 )
 
 type ResumeService struct {
-	log *slog.Logger
-	resume *repository.ResumeRepository
-	skill *repository.ResumeSkillRepository
+	log        *slog.Logger
+	resume     *repository.ResumeRepository
+	skill      *repository.ResumeSkillRepository
 	experience *repository.ResumeExperienceRepository
+	category   *CategoryService
 }
 
 func NewResumeService(
 	log *slog.Logger,
 	resume *repository.ResumeRepository,
-	skill *repository.ResumeSkillRepository, 
+	skill *repository.ResumeSkillRepository,
 	experience *repository.ResumeExperienceRepository,
+	category *CategoryService,
 ) *ResumeService {
 	return &ResumeService{
-		log: log,
-		resume: resume,
-		skill: skill,
+		log:        log,
+		resume:     resume,
+		skill:      skill,
 		experience: experience,
+		category:   category,
 	}
 }
 
@@ -48,7 +51,7 @@ func (s *ResumeService) CreateResume(ctx context.Context, req *model.Resume) (*m
 			return nil, err
 		}
 	}
-	
+
 	return s.GetResume(ctx, resume.Id)
 }
 
@@ -71,7 +74,14 @@ func (s *ResumeService) GetResume(ctx context.Context, id int) (*model.Resume, e
 	}
 
 	resume.Experiences = resume_experiences
-	
+
+	category, err := s.category.GetCategoryByID(ctx, resume.CategoryId)
+	if err != nil {
+		return nil, err
+	}
+
+	resume.Category = category
+
 	return &resume, nil
 }
 

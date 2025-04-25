@@ -91,7 +91,7 @@ func (s *Server) Run() error {
 	resumeExperienceRepository := repository.NewResumeExperienceRepository(s.log, db)
 	resumeSkillRepository := repository.NewResumeSkillRepository(s.log, db)
 	resumeService := service.NewResumeService(
-		s.log, resumeRepository, resumeSkillRepository, resumeExperienceRepository)
+		s.log, resumeRepository, resumeSkillRepository, resumeExperienceRepository, categoryService)
 	resumeHandler := handler.NewResumeHandler(s.log, resumeService)
 
 	messageRepo := repository.NewMessageRepository(db)

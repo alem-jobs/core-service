@@ -1,0 +1,2 @@
+ALTER TABLE vacancies
+ADD COLUMN country VARCHAR(255) NULL;

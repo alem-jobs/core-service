@@ -65,13 +65,8 @@ func (r *UserRepository) UpdateUser(user *model.User) error {
 }
 
 func (r *UserRepository) ListUsers(organizationID int) ([]model.User, error) {
-	query := `SELECT id, name, organization_id, phone, avatar_url, balance, created_at, updated_at FROM users`
-	var args []int
-	if organizationID != 0 {
-		query += "WHERE organization_id = $1"
-		args = append(args, organizationID)
-	}
-	rows, err := r.db.Query(query, args)
+	query := `SELECT id, name, organization_id, phone, avatar_url, balance, created_at, updated_at FROM users WHERE organization_id = $1`
+	rows, err := r.db.Query(query, organizationID)
 	if err != nil {
 		return nil, err
 	}

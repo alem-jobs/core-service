@@ -88,6 +88,10 @@ func (s *UserService) GetProfile(userID int) (*dto.User, error) {
 	if err != nil {
 		return nil, err
 	}
+	org, err := s.userRepo.GetOrganization(user.OrganizationId)
+	if err != nil {
+		return nil, err
+	}
 	return &dto.User{
 		Id:             user.Id,
 		Name:           user.Name,
@@ -95,11 +99,12 @@ func (s *UserService) GetProfile(userID int) (*dto.User, error) {
 		Phone:          user.Phone,
 		AvatarURL:      user.AvatarURL,
 		Balance:        user.Balance,
+		Organization:   *org,
 	}, nil
 }
 
-func (s *UserService) ListUsers() ([]dto.User, error) {
-	users, err := s.userRepo.ListUsers()
+func (s *UserService) ListUsers(organizationID int) ([]dto.User, error) {
+	users, err := s.userRepo.ListUsers(organizationID)
 	if err != nil {
 		return nil, err
 	}

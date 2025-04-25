@@ -75,7 +75,7 @@ func (s *Server) Run() error {
 	userHandler := handler.NewUserHandler(userService)
 
 	organizationRepository := repository.NewOrganizationRepository(s.log, db)
-	organizationService := service.NewOrganizationService(s.log, organizationRepository)
+	organizationService := service.NewOrganizationService(s.log, organizationRepository, userService)
 	organizationHandler := handler.NewOrganizationHandler(s.log, organizationService)
 
 	categoryRepository := repository.NewCategoryRepository(db)
@@ -84,7 +84,7 @@ func (s *Server) Run() error {
 
 	vacancyRepository := repository.NewVacancyRepository(s.log, db)
 	vacancyDetailRepository := repository.NewVacancyDetailRepository(s.log, db)
-	vacancyService := service.NewVacancyService(s.log, vacancyRepository, vacancyDetailRepository)
+	vacancyService := service.NewVacancyService(s.log, vacancyRepository, vacancyDetailRepository, organizationService)
 	vacancyHandler := handler.NewVacancyHandler(s.log, vacancyService)
 
 	resumeRepository := repository.NewResumeRepository(s.log, db)

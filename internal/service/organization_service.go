@@ -12,12 +12,14 @@ import (
 type OrganizationService struct {
 	log  *slog.Logger
 	repo *repository.OrganizationRepository
+	user *UserService
 }
 
-func NewOrganizationService(log *slog.Logger, repo *repository.OrganizationRepository) *OrganizationService {
+func NewOrganizationService(log *slog.Logger, repo *repository.OrganizationRepository, user *UserService) *OrganizationService {
 	return &OrganizationService{
 		log:  log,
 		repo: repo,
+		user: user,
 	}
 }
 
@@ -39,7 +41,7 @@ func (s *OrganizationService) CreateOrganization(req *dto.Organization) (*dto.Or
 	}
 
 	s.log.Info("Organization created successfully", slog.Int("id", org.Id))
-    req.Id = org.Id
+	req.Id = org.Id
 	return req, nil
 }
 
@@ -53,12 +55,17 @@ func (s *OrganizationService) GetOrganization(id int) (*dto.Organization, error)
 		s.log.Warn("Organization not found", slog.Int("id", id))
 		return nil, nil
 	}
+	users, err := s.user.ListUsers(org.Id)
+	if err != nil {
+		return nil, err
+	}
 
 	s.log.Info("Organization retrieved successfully", slog.Int("id", org.Id))
 	return &dto.Organization{
 		Id:          org.Id,
 		Name:        org.Name,
 		Description: org.Description,
+		Users:       users,
 	}, nil
 }
 

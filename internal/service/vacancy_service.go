@@ -10,16 +10,18 @@ import (
 )
 
 type VacancyService struct {
-	log     *slog.Logger
-	vacancy *repository.VacancyRepository
-	detail  *repository.VacancyDetailRepository
+	log          *slog.Logger
+	vacancy      *repository.VacancyRepository
+	detail       *repository.VacancyDetailRepository
+	organization *OrganizationService
 }
 
-func NewVacancyService(log *slog.Logger, vacancy *repository.VacancyRepository, detail *repository.VacancyDetailRepository) *VacancyService {
+func NewVacancyService(log *slog.Logger, vacancy *repository.VacancyRepository, detail *repository.VacancyDetailRepository, organization *OrganizationService) *VacancyService {
 	return &VacancyService{
-		log:     log,
-		vacancy: vacancy,
-		detail:  detail,
+		log:          log,
+		vacancy:      vacancy,
+		detail:       detail,
+		organization: organization,
 	}
 }
 
@@ -71,6 +73,10 @@ func (s *VacancyService) GetVacancyByID(ctx context.Context, id int64) (*dto.Vac
 	if err != nil {
 		return nil, err
 	}
+	organization, err := s.organization.GetOrganization(int(vacancy.OrganizationID))
+	if err != nil {
+		return nil, err
+	}
 
 	var detailResponses []dto.VacancyDetailResponse
 	for _, d := range details {
@@ -96,6 +102,7 @@ func (s *VacancyService) GetVacancyByID(ctx context.Context, id int64) (*dto.Vac
 		OrganizationID: vacancy.OrganizationID,
 		CategoryID:     vacancy.CategoryID,
 		Details:        detailResponses,
+		Organization:   *organization,
 	}, nil
 }
 
@@ -158,6 +165,11 @@ func (s *VacancyService) ListVacancies(ctx context.Context, req dto.ListVacancyR
 			})
 		}
 
+		organization, err := s.organization.GetOrganization(int(v.OrganizationID))
+		if err != nil {
+			return nil, err
+		}
+
 		responseVacancies = append(responseVacancies, dto.Vacancy{
 			ID:             v.ID,
 			Title:          v.Title,
@@ -170,6 +182,7 @@ func (s *VacancyService) ListVacancies(ctx context.Context, req dto.ListVacancyR
 			OrganizationID: v.OrganizationID,
 			CategoryID:     v.CategoryID,
 			Details:        detailResponses,
+			Organization:   *organization,
 		})
 	}
 

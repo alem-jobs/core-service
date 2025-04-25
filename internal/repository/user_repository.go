@@ -2,8 +2,10 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"log/slog"
 
+	"github.com/aidosgal/alem.core-service/internal/dto"
 	"github.com/aidosgal/alem.core-service/internal/model"
 )
 
@@ -22,7 +24,7 @@ func NewUserRepository(log *slog.Logger, db *sql.DB) *UserRepository {
 func (r *UserRepository) CreateUser(user *model.User) (int64, error) {
 	query := `INSERT INTO users (name, organization_id, phone, password, avatar_url, balance, created_at, updated_at) 
 			  VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING id`
-	
+
 	var id int64
 	err := r.db.QueryRow(query, user.Name, user.OrganizationId, user.Phone, user.Password, user.AvatarURL, user.Balance).Scan(&id)
 	if err != nil {
@@ -62,10 +64,14 @@ func (r *UserRepository) UpdateUser(user *model.User) error {
 	return err
 }
 
-
-func (r *UserRepository) ListUsers() ([]model.User, error) {
+func (r *UserRepository) ListUsers(organizationID int) ([]model.User, error) {
 	query := `SELECT id, name, organization_id, phone, avatar_url, balance, created_at, updated_at FROM users`
-	rows, err := r.db.Query(query)
+	var args []int
+	if organizationID != 0 {
+		query += "WHERE organization_id = $1"
+		args = append(args, organizationID)
+	}
+	rows, err := r.db.Query(query, args)
 	if err != nil {
 		return nil, err
 	}
@@ -83,3 +89,19 @@ func (r *UserRepository) ListUsers() ([]model.User, error) {
 	return users, nil
 }
 
+func (r *UserRepository) GetOrganization(id int) (*dto.Organization, error) {
+	query := "SELECT id, name, description FROM organizations WHERE id = $1"
+	org := &dto.Organization{}
+	err := r.db.QueryRow(query, id).Scan(&org.Id, &org.Name, &org.Description)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			r.log.Warn("Organization not found", slog.Int("id", id))
+			return nil, nil
+		}
+		r.log.Error("Failed to get organization", slog.Any("error", err))
+		return nil, err
+	}
+
+	r.log.Info("Organization retrieved", slog.Int("id", org.Id))
+	return org, nil
+}

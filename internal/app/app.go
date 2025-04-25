@@ -134,9 +134,9 @@ func (s *Server) Run() error {
 			resumeRouter.Get("/", resumeHandler.ListResume)
 			resumeRouter.Get("/{resume_id}", resumeHandler.GetResume)
 		})
+		apiRouter.Get("/messages/ws", wsHandler.HandleWebSocket)
 		apiRouter.Route("/messages", func(wsRouter chi.Router) {
 			wsRouter.Use(auth.AuthMiddleware)
-			wsRouter.Get("/ws", wsHandler.HandleWebSocket)
 			wsRouter.Post("/", wsHandler.SendMessage)
 			wsRouter.Get("/", wsHandler.GetMessages)
 			wsRouter.Get("/rooms", wsHandler.GetRooms)

@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/aidosgal/alem.core-service/internal/dto"
@@ -19,6 +20,21 @@ import (
 type WebSocketHandler struct {
 	chatService service.ChatService
 	upgrader    websocket.Upgrader
+	channels    map[string]*Channel
+	mutex       sync.RWMutex
+}
+
+type Channel struct {
+	connections map[int]*websocket.Conn
+	mutex       sync.Mutex
+}
+
+func generateChannelID(user1, user2 int) string {
+	// Make sure the smaller ID is always first for consistency
+	if user1 > user2 {
+		user1, user2 = user2, user1
+	}
+	return fmt.Sprintf("%d-%d", user1, user2)
 }
 
 func NewWebSocketHandler(chatService service.ChatService) *WebSocketHandler {
@@ -31,32 +47,50 @@ func NewWebSocketHandler(chatService service.ChatService) *WebSocketHandler {
 				return true
 			},
 		},
+		channels: make(map[string]*Channel),
 	}
 }
 
 func (h *WebSocketHandler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
-	userId64, ok := middleware.GetUserID(r)
-	if !ok {
-		lib.WriteError(w, http.StatusUnauthorized, fmt.Errorf("Unauthorized"))
+	// Extract user ID from request
+	userIDstr := r.URL.Query().Get("sender_id")
+	userID, _ := strconv.Atoi(userIDstr)
+
+	// Extract receiver ID from query parameters
+	receiverIDStr := r.URL.Query().Get("receiver_id")
+	if receiverIDStr == "" {
+		http.Error(w, "Receiver ID is required", http.StatusBadRequest)
+		return
 	}
 
-	userId := int(userId64)
+	receiverID, err := strconv.Atoi(receiverIDStr)
+	if err != nil {
+		http.Error(w, "Invalid receiver ID", http.StatusBadRequest)
+		return
+	}
 
+	// Generate a unique channel ID for these two users
+	channelID := generateChannelID(userID, receiverID)
+
+	// Upgrade HTTP connection to WebSocket
 	conn, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("Failed to upgrade connection: %v", err)
 		return
 	}
 
-	h.chatService.RegisterConnection(userId, conn)
-	log.Printf("User %d connected", userId)
+	// Add this connection to the appropriate channel
+	h.addToChannel(channelID, userID, conn)
+	log.Printf("User %d connected to channel with user %d (Channel ID: %s)", userID, receiverID, channelID)
 
+	// Clean up when the connection closes
 	defer func() {
 		conn.Close()
-		h.chatService.RemoveConnection(userId)
-		log.Printf("User %d disconnected", userId)
+		h.removeFromChannel(channelID, userID)
+		log.Printf("User %d disconnected from channel with user %d", userID, receiverID)
 	}()
 
+	// Message handling loop
 	for {
 		messageType, p, err := conn.ReadMessage()
 		if err != nil {
@@ -66,6 +100,7 @@ func (h *WebSocketHandler) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 			break
 		}
 
+		// Handle ping messages
 		if messageType == websocket.PingMessage {
 			if err := conn.WriteMessage(websocket.PongMessage, nil); err != nil {
 				log.Printf("Failed to send pong: %v", err)
@@ -74,13 +109,87 @@ func (h *WebSocketHandler) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 			continue
 		}
 
+		// Parse the incoming message
 		var message dto.Message
 		if err := json.Unmarshal(p, &message); err != nil {
 			log.Printf("Failed to parse message: %v", err)
 			continue
 		}
 
-		log.Printf("Received message from user %d to user %d", message.SenderId, message.ReceiverId)
+		// Validate sender and receiver
+		if message.SenderId != userID || message.ReceiverId != receiverID {
+			log.Printf("Invalid sender or receiver ID in message")
+			continue
+		}
+
+		if err != nil {
+			log.Printf("Failed to save message: %v", err)
+			continue
+		}
+
+		log.Printf("Message processed from user %d to user %d", message.SenderId, message.ReceiverId)
+	}
+}
+
+// Add a connection to a specific channel
+func (h *WebSocketHandler) addToChannel(channelID string, userID int, conn *websocket.Conn) {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
+	// Create the channel if it doesn't exist
+	if _, exists := h.channels[channelID]; !exists {
+		h.channels[channelID] = &Channel{
+			connections: make(map[int]*websocket.Conn),
+		}
+	}
+
+	// Add the connection to the channel
+	channel := h.channels[channelID]
+	channel.mutex.Lock()
+	defer channel.mutex.Unlock()
+	channel.connections[userID] = conn
+}
+
+// Remove a connection from a channel
+func (h *WebSocketHandler) removeFromChannel(channelID string, userID int) {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
+	// Check if the channel exists
+	channel, exists := h.channels[channelID]
+	if !exists {
+		return
+	}
+
+	// Remove the connection
+	channel.mutex.Lock()
+	defer channel.mutex.Unlock()
+	delete(channel.connections, userID)
+
+	// Clean up empty channels
+	if len(channel.connections) == 0 {
+		delete(h.channels, channelID)
+	}
+}
+
+// Broadcast a message to all connections in a channel
+func (h *WebSocketHandler) broadcastToChannel(channelID string, message []byte) {
+	h.mutex.RLock()
+	defer h.mutex.RUnlock()
+
+	// Check if the channel exists
+	channel, exists := h.channels[channelID]
+	if !exists {
+		return
+	}
+
+	// Send the message to all connections in the channel
+	channel.mutex.Lock()
+	defer channel.mutex.Unlock()
+	for userID, conn := range channel.connections {
+		if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
+			log.Printf("Failed to send message to user %d: %v", userID, err)
+		}
 	}
 }
 
@@ -96,10 +205,10 @@ func (h *WebSocketHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 	userId64, ok := middleware.GetUserID(r)
 	if !ok {
 		lib.WriteError(w, http.StatusUnauthorized, fmt.Errorf("Unauthorized"))
+		return
 	}
 
 	senderId := int(userId64)
-
 
 	receiverId, err := strconv.Atoi(receiverIdStr)
 	if err != nil {
@@ -118,6 +227,11 @@ func (h *WebSocketHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Also broadcast the message through WebSocket for real-time updates
+	channelID := generateChannelID(senderId, receiverId)
+	messageJSON, _ := json.Marshal(message)
+	h.broadcastToChannel(channelID, messageJSON)
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(message)
 }
@@ -127,9 +241,10 @@ func (h *WebSocketHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	limitStr := r.URL.Query().Get("limit")
 	offsetStr := r.URL.Query().Get("offset")
 
-    userId64, ok := middleware.GetUserID(r)
+	userId64, ok := middleware.GetUserID(r)
 	if !ok {
 		lib.WriteError(w, http.StatusUnauthorized, fmt.Errorf("Unauthorized"))
+		return
 	}
 
 	senderId := int(userId64)
@@ -140,7 +255,7 @@ func (h *WebSocketHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	limit := 50 
+	limit := 50
 	if limitStr != "" {
 		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
 			limit = l
@@ -174,6 +289,7 @@ func (h *WebSocketHandler) GetRooms(w http.ResponseWriter, r *http.Request) {
 	userId64, ok := middleware.GetUserID(r)
 	if !ok {
 		lib.WriteError(w, http.StatusUnauthorized, fmt.Errorf("Unauthorized"))
+		return
 	}
 
 	userId := int(userId64)

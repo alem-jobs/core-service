@@ -62,28 +62,34 @@ func (r *VacancyRepository) List(ctx context.Context, req dto.ListVacancyRequest
 	filters := []interface{}{}
 	conditions := []string{}
 
+	argIndex := 1
+
 	if req.CategoryID > 0 {
-		conditions = append(conditions, "category_id = ?")
+		conditions = append(conditions, fmt.Sprintf("category_id = $%d", argIndex))
 		filters = append(filters, req.CategoryID)
+		argIndex++
 	}
 	if req.SalaryFrom > 0 {
-		conditions = append(conditions, "salary_from >= ?")
+		conditions = append(conditions, fmt.Sprintf("salary_from >= $%d", argIndex))
 		filters = append(filters, req.SalaryFrom)
+		argIndex++
 	}
 	if req.SalaryTo > 0 {
-		conditions = append(conditions, "salary_to <= ?")
+		conditions = append(conditions, fmt.Sprintf("salary_to <= $%d", argIndex))
 		filters = append(filters, req.SalaryTo)
+		argIndex++
 	}
 	if req.Search != "" {
-		conditions = append(conditions, "title ILIKE ? OR description ILIKE ?")
+		conditions = append(conditions, fmt.Sprintf("(title ILIKE $%d OR description ILIKE $%d)", argIndex, argIndex+1))
 		filters = append(filters, "%"+req.Search+"%", "%"+req.Search+"%")
+		argIndex += 2
 	}
 
 	if len(conditions) > 0 {
-		query += " WHERE " + fmt.Sprintf("(%s)", joinConditions(conditions, " AND "))
+		query += " WHERE " + joinConditions(conditions, " AND ")
 	}
 
-	query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+	query += fmt.Sprintf(" ORDER BY created_at DESC LIMIT $%d OFFSET $%d", argIndex, argIndex+1)
 	filters = append(filters, req.Limit, req.Offset)
 
 	r.log.Debug("Executing query", slog.String("query", query))
@@ -104,9 +110,10 @@ func (r *VacancyRepository) List(ctx context.Context, req dto.ListVacancyRequest
 	}
 
 	var total int
+
 	countQuery := "SELECT COUNT(*) FROM vacancies"
 	if len(conditions) > 0 {
-		countQuery += " WHERE " + fmt.Sprintf("(%s)", joinConditions(conditions, " AND "))
+		countQuery += " WHERE " + joinConditions(conditions, " AND ")
 	}
 
 	if err := r.db.QueryRowContext(ctx, countQuery, filters[:len(filters)-2]...).Scan(&total); err != nil {

@@ -36,6 +36,7 @@ func (s *VacancyService) CreateVacancy(ctx context.Context, req dto.CreateVacanc
 		SalaryCurrency: req.Vacancy.SalaryCurrency,
 		OrganizationID: req.Vacancy.OrganizationID,
 		CategoryID:     req.Vacancy.CategoryID,
+		Country:        req.Vacancy.Country,
 	})
 	if err != nil {
 		return nil, err
@@ -103,6 +104,7 @@ func (s *VacancyService) GetVacancyByID(ctx context.Context, id int64) (*dto.Vac
 		CategoryID:     vacancy.CategoryID,
 		Details:        detailResponses,
 		Organization:   *organization,
+		Country:        vacancy.Country,
 	}, nil
 }
 
@@ -118,6 +120,7 @@ func (s *VacancyService) UpdateVacancy(ctx context.Context, req dto.UpdateVacanc
 		SalaryCurrency: req.Vacancy.SalaryCurrency,
 		OrganizationID: req.Vacancy.OrganizationID,
 		CategoryID:     req.Vacancy.CategoryID,
+		Country:        req.Vacancy.Country,
 	})
 	if err != nil {
 		return nil, err
@@ -183,6 +186,7 @@ func (s *VacancyService) ListVacancies(ctx context.Context, req dto.ListVacancyR
 			CategoryID:     v.CategoryID,
 			Details:        detailResponses,
 			Organization:   *organization,
+			Country:        v.Country,
 		})
 	}
 

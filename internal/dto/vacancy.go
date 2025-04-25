@@ -42,6 +42,7 @@ type Vacancy struct {
 	OrganizationID int64                   `json:"organization_id"`
 	Organization   Organization            `json:"organization"`
 	CategoryID     int64                   `json:"category_id"`
+	Country        string                  `json:"countr"`
 	Category       CategoryResponse        `json:"category"`
 	Details        []VacancyDetailResponse `json:"details"`
 	CreatedAt      string                  `json:"created_at"`

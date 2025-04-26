@@ -105,6 +105,7 @@ func (s *VacancyService) GetVacancyByID(ctx context.Context, id int64) (*dto.Vac
 		Details:        detailResponses,
 		Organization:   *organization,
 		Country:        vacancy.Country,
+		CreatedAt:      vacancy.CreatedAt,
 	}, nil
 }
 
@@ -187,6 +188,7 @@ func (s *VacancyService) ListVacancies(ctx context.Context, req dto.ListVacancyR
 			Details:        detailResponses,
 			Organization:   *organization,
 			Country:        v.Country,
+			CreatedAt:      v.CreatedAt,
 		})
 	}
 

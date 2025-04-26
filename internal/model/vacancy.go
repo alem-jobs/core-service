@@ -12,6 +12,7 @@ type Vacancy struct {
 	Country        string   `db:"country"`
 	OrganizationID int64    `db:"organization_id"`
 	CategoryID     int64    `db:"category_id"`
+	CreatedAt      string
 }
 
 type VacancyDetail struct {

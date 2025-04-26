@@ -34,10 +34,10 @@ func (r *VacancyRepository) Create(ctx context.Context, vacancy *model.Vacancy) 
 }
 
 func (r *VacancyRepository) GetByID(ctx context.Context, id int64) (*model.Vacancy, error) {
-	query := `SELECT id, title, description, salary_from, salary_to, salary_exact, salary_type, salary_currency, organization_id, category_id, country FROM vacancies WHERE id = $1`
+	query := `SELECT id, title, description, salary_from, salary_to, salary_exact, salary_type, salary_currency, organization_id, category_id, country, created_at FROM vacancies WHERE id = $1`
 	var vacancy model.Vacancy
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
-		&vacancy.ID, &vacancy.Title, &vacancy.Description, &vacancy.SalaryFrom, &vacancy.SalaryTo, &vacancy.SalaryExact, &vacancy.SalaryType, &vacancy.SalaryCurrency, &vacancy.OrganizationID, &vacancy.CategoryID, &vacancy.Country,
+		&vacancy.ID, &vacancy.Title, &vacancy.Description, &vacancy.SalaryFrom, &vacancy.SalaryTo, &vacancy.SalaryExact, &vacancy.SalaryType, &vacancy.SalaryCurrency, &vacancy.OrganizationID, &vacancy.CategoryID, &vacancy.Country, &vacancy.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (r *VacancyRepository) Delete(ctx context.Context, id int64) error {
 }
 
 func (r *VacancyRepository) List(ctx context.Context, req dto.ListVacancyRequest) ([]model.Vacancy, int, error) {
-	query := `SELECT id, title, description, salary_from, salary_to, salary_exact, salary_type, salary_currency, organization_id, category_id, country FROM vacancies`
+	query := `SELECT id, title, description, salary_from, salary_to, salary_exact, salary_type, salary_currency, organization_id, category_id, country, created_at FROM vacancies`
 	filters := []interface{}{}
 	conditions := []string{}
 
@@ -103,7 +103,7 @@ func (r *VacancyRepository) List(ctx context.Context, req dto.ListVacancyRequest
 	var vacancies []model.Vacancy
 	for rows.Next() {
 		var v model.Vacancy
-		if err := rows.Scan(&v.ID, &v.Title, &v.Description, &v.SalaryFrom, &v.SalaryTo, &v.SalaryExact, &v.SalaryType, &v.SalaryCurrency, &v.OrganizationID, &v.CategoryID, &v.Country); err != nil {
+		if err := rows.Scan(&v.ID, &v.Title, &v.Description, &v.SalaryFrom, &v.SalaryTo, &v.SalaryExact, &v.SalaryType, &v.SalaryCurrency, &v.OrganizationID, &v.CategoryID, &v.Country, &v.CreatedAt); err != nil {
 			return nil, 0, err
 		}
 		vacancies = append(vacancies, v)

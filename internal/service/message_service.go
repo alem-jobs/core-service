@@ -152,7 +152,11 @@ func (s *chatService) GetRoomsBySenderId(ctx context.Context, senderId int) ([]d
 
 	messageDTOs := make([]dto.Message, 0, len(messages))
 	for _, message := range messages {
-		receiver, err := s.userService.GetProfile(message.ReceiverId)
+		id := message.ReceiverId
+		if id == senderId {
+			id = message.SenderId
+		}
+		receiver, err := s.userService.GetProfile(id)
 		if err != nil {
 			return nil, err
 		}

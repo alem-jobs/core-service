@@ -71,11 +71,17 @@ func (h *VacancyHandler) ListVacancies(w http.ResponseWriter, r *http.Request) {
 	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	categoryID, _ := strconv.Atoi(r.URL.Query().Get("category_id"))
+	search := r.URL.Query().Get("search")
+	salaryFrom, _ := strconv.Atoi(r.URL.Query().Get("salary_from"))
+	salaryTo, _ := strconv.Atoi(r.URL.Query().Get("salary_to"))
 
 	req := dto.ListVacancyRequest{
-		Offset:       offset,
-		Limit:        limit,
-		CategoryID:   int(categoryID),
+		Offset:     offset,
+		Limit:      limit,
+		CategoryID: int(categoryID),
+		Search:     search,
+		SalaryFrom: float64(salaryFrom),
+		SalaryTo:   float64(salaryTo),
 	}
 
 	vacancies, err := h.service.ListVacancies(r.Context(), req)

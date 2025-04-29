@@ -108,7 +108,6 @@ func (h *WebSocketHandler) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 	h.addToChannel(channelID, userID, conn)
 	log.Printf("User %d connected to channel with user %d (Channel ID: %s)", userID, receiverID, channelID)
 
-	// Clean up when the connection closes
 	defer func() {
 		log.Printf("Closing WebSocket connection for user %d in channel %s", userID, channelID)
 		conn.Close()
@@ -116,7 +115,6 @@ func (h *WebSocketHandler) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 		log.Printf("User %d disconnected from channel with user %d", userID, receiverID)
 	}()
 
-	// Message handling loop
 	for {
 		log.Printf("Waiting for message from user %d", userID)
 		messageType, p, err := conn.ReadMessage()
@@ -130,7 +128,6 @@ func (h *WebSocketHandler) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 		}
 		log.Printf("Received message of type %d from user %d", messageType, userID)
 
-		// Handle ping messages
 		if messageType == websocket.PingMessage {
 			log.Printf("Received ping from user %d, sending pong", userID)
 			if err := conn.WriteMessage(websocket.PongMessage, nil); err != nil {
@@ -140,23 +137,42 @@ func (h *WebSocketHandler) HandleWebSocket(w http.ResponseWriter, r *http.Reques
 			continue
 		}
 
-		// Parse the incoming message
 		log.Printf("Parsing message: %s", string(p))
-		var message dto.Message
-		if err := json.Unmarshal(p, &message); err != nil {
+		var messageRequest dto.Message
+		if err := json.Unmarshal(p, &messageRequest); err != nil {
 			log.Printf("Failed to parse message: %v", err)
 			continue
 		}
-		log.Printf("Successfully parsed message from user %d to user %d", message.SenderId, message.ReceiverId)
+		log.Printf("Successfully parsed message from user %d to user %d", messageRequest.SenderId, messageRequest.ReceiverId)
 
-		// Validate sender and receiver
-		if message.SenderId != userID || message.ReceiverId != receiverID {
+		if messageRequest.SenderId != userID || messageRequest.ReceiverId != receiverID {
 			log.Printf("Invalid sender or receiver ID in message. Expected sender: %d, got: %d. Expected receiver: %d, got: %d",
-				userID, message.SenderId, receiverID, message.ReceiverId)
+				userID, messageRequest.SenderId, receiverID, messageRequest.ReceiverId)
 			continue
 		}
 
-		log.Printf("Message processed from user %d to user %d", message.SenderId, message.ReceiverId)
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+
+		message, err := h.chatService.SendMessage(ctx, userID, receiverID, *messageRequest.Text, nil)
+		cancel()
+
+		if err != nil {
+			log.Printf("Failed to save message: %v", err)
+			if err := conn.WriteMessage(websocket.TextMessage, []byte(`{"error": "Failed to save message"}`)); err != nil {
+				log.Printf("Failed to send error response: %v", err)
+			}
+			continue
+		}
+
+		// Broadcast the message to all connections in the channel
+		messageJSON, err := json.Marshal(message)
+		if err != nil {
+			log.Printf("Failed to marshal message: %v", err)
+			continue
+		}
+
+		h.broadcastToChannel(channelID, messageJSON)
+		log.Printf("Message processed and broadcast from user %d to user %d", message.SenderId, message.ReceiverId)
 	}
 }
 
